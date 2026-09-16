@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/abhishek8841/go-monolith/internal/config"
+	"github.com/abhishek8841/go-monolith/internal/handlers"
 )
 
 func main() {
@@ -17,13 +18,7 @@ func main() {
 	// if we did http.HandleFunc then automatically the global mux would be registered which is considered bad practice so we create new mux and use that...
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		// here order matters ie write header flushes the header and we cant add new headers after that for .header.set method which just registers the headers should be written first
-
-		w.Write([]byte(`{"status":"ok"}`))
-	})
+	mux.HandleFunc("GET /healthz", handlers.Health)
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,
