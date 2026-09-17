@@ -7,12 +7,19 @@ import (
 	"time"
 
 	"github.com/abhishek8841/go-monolith/internal/config"
+	"github.com/abhishek8841/go-monolith/internal/db"
 	"github.com/abhishek8841/go-monolith/internal/handlers"
 )
 
 func main() {
 	cfg := config.MustLoad()
 
+	_, err := db.Connect(cfg.DatabaseUrl)
+	if err != nil {
+		log.Fatalf("main.db.connect: %v", err)
+	}
+
+	fmt.Println("Starting the server now...")
 	fmt.Println("Starting the server now...")
 
 	// if we did http.HandleFunc then automatically the global mux would be registered which is considered bad practice so we create new mux and use that...

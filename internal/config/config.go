@@ -7,12 +7,14 @@ import (
 )
 
 type Config struct {
-	Port string
-	Env  string
+	Port        string
+	Env         string
+	DatabaseUrl string
 }
 
 func MustLoad() Config {
 	godotenv.Load()
+	
 	port := os.Getenv("PORT")
 	if port == "" {
 		panic("PORT IS REQUIRED")
@@ -21,8 +23,14 @@ func MustLoad() Config {
 	if env == "" {
 		panic("ENV IS REQUIRED")
 	}
+	DatabaseUrl := os.Getenv("DATABASE_URL")
+	if DatabaseUrl == "" {
+		panic("DATABASE_URL IS REQUIRED")
+	}
+
 	return Config{
-		Port: port,
-		Env:  env,
+		Port:        port,
+		Env:         env,
+		DatabaseUrl: DatabaseUrl,
 	}
 }
