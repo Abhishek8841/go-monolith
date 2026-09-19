@@ -20,7 +20,6 @@ func main() {
 	}
 
 	fmt.Println("Starting the server now...")
-	fmt.Println("Starting the server now...")
 
 	// if we did http.HandleFunc then automatically the global mux would be registered which is considered bad practice so we create new mux and use that...
 	mux := http.NewServeMux()
