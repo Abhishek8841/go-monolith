@@ -8,7 +8,7 @@ import (
 	"github.com/abhishek8841/go-monolith/internal/config"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-    _ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
@@ -34,7 +34,7 @@ func main() {
 		}
 		fmt.Println("up")
 	case "down":
-		if err := m.Down(); err != nil {
+		if err := m.Steps(-1); err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println("down")
@@ -42,3 +42,8 @@ func main() {
 		log.Fatalf("unknown command %s", os.Args[1])
 	}
 }
+
+// m.Up()	Apply all pending migrations
+// m.Down()	Roll back all migrations
+// m.Steps(1)	Apply 1 migration
+// m.Steps(-1)	Roll back 1 migration
