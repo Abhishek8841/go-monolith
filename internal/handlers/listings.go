@@ -27,10 +27,16 @@ func NewListingHandler(db *sql.DB) *ListingHandler {
 	}
 }
 
+// always pass context in things like api or requests like we did below
+
 // using this constructor pattern we dont have to do dependency injection of dependencies
 // so we can remove the envelop function we used from over the http.HandleFunc type of funcs
 func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
-	rows, err := lh.db.Query(`SELECT id, title, description, price, city, created_at 
+	// request scoped context is a context that web server creates for us and calls the cancel function on it when request gets cancelled
+	ctx := r.Context()
+	// we control zombie query using this
+	rows, err := lh.db.QueryContext(ctx,
+		`SELECT id, title, description, price, city, created_at 
 		FROM LISTINGS
 		ORDER BY created_at DESC 
 		LIMIT 100`)
@@ -64,9 +70,10 @@ func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	id := r.PathValue("id")
 
-	_, err := lh.db.Exec(`DELETE FROM LISTINGS WHERE id = $1`, id)
+	_, err := lh.db.ExecContext(ctx, `DELETE FROM LISTINGS WHERE id = $1`, id)
 	if err != nil {
 		log.Printf("Delete: %v", err)
 		http.Error(w, "Internal Error", http.StatusInternalServerError)
