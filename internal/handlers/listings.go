@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -76,9 +77,13 @@ func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	_, err := lh.db.ExecContext(ctx, `DELETE FROM LISTINGS WHERE id = $1`, id)
 	if err != nil {
 		log.Printf("Delete: %v", err)
+		// in form of key value pair after the init message
+		slog.Error("delete failed", "listing_id", id, "err", err)
 		http.Error(w, "Internal Error", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// in slog.Debug we try to log as much as we can so thats why the default is info level so as to ignore the the hefty .Debug logs during peace times

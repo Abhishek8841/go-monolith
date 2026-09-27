@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/abhishek8841/go-monolith/internal/config"
@@ -18,6 +20,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("main.db.connect: %v", err)
 	}
+
+	// default is LevelInfo
+	// the level which is selected that and all the levels with severity more that that will get logged
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+		Level: slog.LevelInfo,
+	}))
+	slog.SetDefault(logger)
 
 	fmt.Println("Starting the server now...")
 
