@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/abhishek8841/go-monolith/internal/middleware"
 )
 
 type listing struct {
@@ -19,12 +21,14 @@ type listing struct {
 }
 
 type ListingHandler struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *slog.Logger
 }
 
-func NewListingHandler(db *sql.DB) *ListingHandler {
+func NewListingHandler(db *sql.DB, logger *slog.Logger) *ListingHandler {
 	return &ListingHandler{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 
@@ -42,7 +46,7 @@ func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 		ORDER BY created_at DESC 
 		LIMIT 100`)
 	if err != nil {
-		log.Printf("Query: %v", err)
+		lh.logger.Info("listings query error", "err", err)
 		http.Error(w, "Internal Error", http.StatusInternalServerError)
 		return
 	}
@@ -51,7 +55,7 @@ func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var l listing
 		if err := rows.Scan(&l.ID, &l.Title, &l.Description, &l.Price, &l.City, &l.CreatedAt); err != nil {
-			log.Printf("Rows Scan: %v", err)
+			lh.logger.Error("rows scan error", "err", err)
 			http.Error(w, "Internal Error", http.StatusInternalServerError)
 			return
 		}
@@ -72,13 +76,15 @@ func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 
 func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	requestId := middleware.RequestIDFromContext(ctx)
+
 	id := r.PathValue("id")
 
 	_, err := lh.db.ExecContext(ctx, `DELETE FROM LISTINGS WHERE id = $1`, id)
 	if err != nil {
 		log.Printf("Delete: %v", err)
 		// in form of key value pair after the init message
-		slog.Error("delete failed", "listing_id", id, "err", err)
+		lh.logger.Error("delete failed", "listing_id", id, "request_id", requestId, "err", err)
 		http.Error(w, "Internal Error", http.StatusInternalServerError)
 		return
 	}
