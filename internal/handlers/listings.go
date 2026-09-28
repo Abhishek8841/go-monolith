@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/abhishek8841/go-monolith/internal/httpx"
 	"github.com/abhishek8841/go-monolith/internal/middleware"
 )
 
@@ -85,7 +86,8 @@ func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Delete: %v", err)
 		// in form of key value pair after the init message
 		lh.logger.Error("delete failed", "listing_id", id, "request_id", requestId, "err", err)
-		http.Error(w, "Internal Error", http.StatusInternalServerError)
+		// http.Error(w, "Internal Error", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "Something went wrong", httpx.CodeInternalError)
 		return
 	}
 
@@ -93,3 +95,4 @@ func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 // in slog.Debug we try to log as much as we can so thats why the default is info level so as to ignore the the hefty .Debug logs during peace times
+// in go we have nominal typing i.e. directly passing (in the 4th arg of httpx.Error) "code_constant" can slip as Code type but var temp string = "code_constant gives error"
