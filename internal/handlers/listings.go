@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -16,7 +17,7 @@ type listing struct {
 	ID          string    `json:"id"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
-	Price       string    `json:"price"`
+	Price       int64     `json:"price"`
 	City        string    `json:"city"`
 	CreatedAt   time.Time `json:"created_at"`
 }
@@ -96,3 +97,32 @@ func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 // in slog.Debug we try to log as much as we can so thats why the default is info level so as to ignore the the hefty .Debug logs during peace times
 // in go we have nominal typing i.e. directly passing (in the 4th arg of httpx.Error) "code_constant" can slip as Code type but var temp string = "code_constant gives error"
+
+func (lh ListingHandler) Create(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	requestId := middleware.RequestIDFromContext(ctx)
+
+	var req listing
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		lh.logger.Error("failed to decode", "request_id", requestId, "err", err)
+		httpx.Error(w, http.StatusBadRequest, "invalid body", httpx.CodeMalformedJson)
+		return
+	}
+	fmt.Println(req)
+	row := lh.db.QueryRowContext(ctx, `
+	INSERT INTO LISTINGS (title, description, price, city) VALUES ($1, $2, $3, $4) RETURNING id`, req.Title, req.Description, req.Price, req.City)
+	var id string
+	if err := row.Scan(&id); err != nil {
+		lh.logger.Error("failed to insert", "request_id", requestId, "err", err)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
+	}
+	lh.logger.Info("listing created", "request_id", requestId, "listing_id", id)
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	_ = json.NewEncoder(w).Encode(map[string]string{"id": id})
+
+}
