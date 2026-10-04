@@ -3,7 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"log"
 	"log/slog"
 	"net/http"
@@ -110,7 +110,14 @@ func (lh ListingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusBadRequest, "invalid body", httpx.CodeMalformedJson)
 		return
 	}
-	fmt.Println(req)
+
+	if err := req.Validate(); err != nil {
+		var verr *ValidationError
+		errors.As(err, &verr)
+		httpx.ValidationError(w, http.StatusUnprocessableEntity, err.Error(), httpx.CodeValidationError, verr.Field)
+		return
+	}
+
 	row := lh.db.QueryRowContext(ctx, `
 	INSERT INTO LISTINGS (title, description, price, city) VALUES ($1, $2, $3, $4) RETURNING id, title, created_at`, req.Title, req.Description, req.Price, req.City)
 	// var id string
@@ -120,6 +127,7 @@ func (lh ListingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
 		return
 	}
+
 	lh.logger.Info("listing created", "request_id", requestId, "listing_id", out.ID)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
