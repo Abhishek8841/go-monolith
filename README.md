@@ -6,7 +6,7 @@ A Go backend API built from scratch using only the standard library (`net/http`)
 
 This project implements a listings API as a vehicle for practicing clean backend architecture in Go. The emphasis is not on the domain logic itself, but on the engineering decisions behind it: how dependencies are wired, how context flows through the stack, how errors are surfaced to clients, and how the database layer is managed responsibly.
 
-Deployed to Render from day 1 -- shipping incrementally instead of building everything locally and deploying at the end. No frameworks. No routers. Just Go 1.22+ `net/http` with method-based routing, a live Neon PostgreSQL instance, and deliberate software design.
+Deployed to [Render](https://go-monolith-w6pr.onrender.com) from day 1 -- shipping incrementally instead of building everything locally and deploying at the end. No frameworks. No routers. Just Go 1.22+ `net/http` with method-based routing, a live Neon PostgreSQL instance, and deliberate software design.
 
 ## Engineering Practices
 
